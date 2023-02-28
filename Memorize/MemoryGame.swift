@@ -9,7 +9,10 @@ import Foundation
 
 struct MemoryGame<CardContent> where CardContent: Equatable {
     private(set) var cards: Array<Card>
-    private var indexOfTheOneAndOnlyFaceUpCard: Int?
+    private var indexOfTheOneAndOnlyFaceUpCard: Int? {
+        get { cards.indices.filter({ cards[$0].isFaceUp }).oneAndOnly }
+        set { cards.indices.forEach { cards[$0].isFaceUp = ($0 == newValue) } }
+    }
        
     mutating func choose(_ card: Card) {
 //        if let chosenIndex = index(of: card) {
@@ -19,24 +22,11 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
                     cards[chosenIndex].isMatched = true
                     cards[potentialMatchIndex].isMatched = true
                 }
-                indexOfTheOneAndOnlyFaceUpCard = nil
+                cards[chosenIndex].isFaceUp = true
             } else {
-                for index in cards.indices {
-                    cards[index].isFaceUp = false
-                }
                 indexOfTheOneAndOnlyFaceUpCard = chosenIndex
             }
-            cards[chosenIndex].isFaceUp.toggle()
         }
-    }
-    
-    func index(of card: Card) -> Int? {
-        for index in 0..<cards.count {
-            if cards[index].id == card.id {
-                return index
-            }
-        }
-        return nil
     }
     
     struct Card: Identifiable {
@@ -48,11 +38,22 @@ struct MemoryGame<CardContent> where CardContent: Equatable {
     
     // 不像其他的语言，swift的带名称参数依然不能随意更换参数间的位置
     init(numberOfPairsOfCards: Int, createContent: (Int) -> CardContent) {
-        cards = [Card]() // 初始化一个Array
+        cards = [] // 初始化一个Array，类型推断
         for pairIndex in 0..<numberOfPairsOfCards {
             let content = createContent(pairIndex)
             cards.append(Card(id: pairIndex * 2, content: content))
             cards.append(Card(id: pairIndex * 2 + 1, content: content))
+        }
+    }
+}
+
+
+extension Array {
+    var oneAndOnly: Element? {
+        if self.count == 1 {
+            return self.first
+        } else {
+            return nil
         }
     }
 }
